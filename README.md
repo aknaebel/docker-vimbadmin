@@ -54,7 +54,7 @@ services:
         env_file:
             - ./env
         environment:
-            VIMBADMIN_PASSWORD: vimbadmin_password
+            VIMBADMIN_PASSWORD=vimbadmin_password
             DBHOST=mariadb
             MEMCACHE_HOST=memcached
             ADMIN_EMAIL=admin@example.com
