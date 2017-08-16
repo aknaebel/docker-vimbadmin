@@ -32,41 +32,115 @@ docker run --name vimbadmin -d -p 9000:9000 \
 ## Docker-compose:
 ``` 
 version: '2'
+
+networks:
+  extnet:
+    external: true
+  intnet:
+    driver: bridge
+
+volumes:
+  vimbadminvol:
+
 services:
-    memcached:
-        image: memcached
 
-    mariadb:
-        image: mariadb
-        volumes:
-            - ./mariadb/data:/var/lib/mysql
-        environment:
-            - MYSQL_ROOT_PASSWORD=password
-            - MYSQL_DATABASE=vimbadmin
-            - MYSQL_USER=vimbadmin
-            - MYSQL_PASSWORD=vimbadmin_password
+  vimbadmin-memcached:
+    image: memcached
+    container_name: vimbadmin-memcached
+    networks:
+      - intnet
+    restart: always
 
-    vimbadmin:
-        image: aknaebel/vimbadmin:latest
-        links:
-            - mariadb
-            - memcached
-        env_file:
-            - ./env
-        environment:
-            VIMBADMIN_PASSWORD=vimbadmin_password
-            DBHOST=mariadb
-            MEMCACHE_HOST=memcached
-            ADMIN_EMAIL=admin@example.com
-            ADMIN_PASSWORD=admin_password
-            SMTP_HOST=smtp.example.com
-            APPLICATION_ENV=production
-            OPCACHE_MEM_SIZE=128
+  vimbadmin-mariadb:
+    image: mariadb
+    container_name: vimbadmin-mariadb
+    volumes:
+      - ./vimbadmin-mariadb/data:/var/lib/mysql
+    networks:
+      - intnet
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=vimbadmin
+      - MYSQL_USER=vimbadmin
+      - MYSQL_PASSWORD=vimbadmin_password
+    restart: always
+
+  vimbadmin:
+    image: aknaebel/vimbadmin:latest
+    container_name: vimbadmin
+    links:
+      - vimbadmin-mariadb
+      - vimbadmin-memcached
+    networks:
+      - intnet
+    volumes:
+      - vimbadminvol:/var/www/vimbadmin
+    environment:
+      - VIMBADMIN_PASSWORD=vimbadmin_password
+      - DBHOST=vimbadmin-mariadb
+      - MEMCACHE_HOST=vimbadmin-memcached
+      - ADMIN_EMAIL=admin@example.com
+      - ADMIN_PASSWORD=admin_password
+      - SMTP_HOST=smtp.example.com
+      - APPLICATION_ENV=production
+      - OPCACHE_MEM_SIZE=128
+    restart: always
+
+  nginx:
+    image: nginx
+    container_name: nginx
+    volumes:
+      - ./nginx/config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - vimbadminvol:/var/www/vimbadmin
+    environment:
+      - VIRTUAL_HOST=www.example.com
+    networks:
+      - intnet
+      - extnet
+    ports:
+      - 80:80
+    restart: always
+```
+
+## nginx.conf
+```
+user www-data;
+
+events {
+        worker_connections 768;
+}
+
+http {
+
+        include /etc/nginx/mime.types;
+
+        server {
+                listen 80;
+                server_name www.example.com;
+                root /var/www/vimbadmin/public;
+                index index.php;
+                location / {
+                        try_files $uri $uri/ /index.php?$args;
+                }
+                location ~ \.php$ {
+                        try_files $uri =404;
+                        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                        fastcgi_pass    vimbadmin:9000;
+                        fastcgi_index   index.php;
+                        fastcgi_param   SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                        include         fastcgi_params;
+                }
+        }
+
+}
+
 ```
 
 ```
 docker-compose up -d
 ```
+
+Vimbadmin will now be accessible at `http://www.example.com/`.
 
 ## Vimbadmin stuff:
 
@@ -80,7 +154,7 @@ docker-compose up -d
 - OPCACHE_MEM_SIZE : opcache memory size in megabytes (default : 128)
 
 ### Volume:
-The image provide a volume in **/var/www/vimbadmin**. You must use it with your web server to get the CSS and JS files
+The image provide a volume in **/var/www/vimbadmin**. You must use it with your web server to get the CSS and JS files in whatever web server container you run.
 
 ### Documentation
-See the [official documentation](http://www.vimbadmin.net/) to configure a specific option of your vimbadmin image
+The above example assumes nginx as the web server. See the [official documentation](http://www.vimbadmin.net/) to configure a specific option of your vimbadmin image. 
