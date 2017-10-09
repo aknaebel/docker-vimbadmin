@@ -9,7 +9,6 @@ RUN echo "http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
  && echo "http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
  && echo "http://nl.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
  && BUILD_DEPS="gnupg tar build-base autoconf automake libtool" \
-
  && apk upgrade --update\
  && apk add ca-certificates openssl \
       php7-fpm php7 php7-phar php7-cgi php7-mcrypt php7-json php7-memcached php7-pdo php7-pdo_mysql php7-gettext php7-opcache \
@@ -23,15 +22,11 @@ RUN echo "http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
       curl \
       zip unzip \
       bash \
-
  && echo "date.timezone = 'UTC'" >> /etc/php7/php.ini \
  && echo "short_open_tag = 0" >> /etc/php7/php.ini \
-
  && addgroup -g 82 -S www-data \
  && adduser -u 82 -D -S -G www-data www-data \
  && curl -sS https://getcomposer.org/installer | php7 -- --filename=composer --install-dir=/usr/local/bin \
- && ln -s /usr/bin/php7 /usr/bin/php \
-
  && mkdir -p $INSTALL_PATH \
  && git clone https://github.com/opensolutions/vimbadmin.git ${INSTALL_PATH} \
  && cd ${INSTALL_PATH} \
