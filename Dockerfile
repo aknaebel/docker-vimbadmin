@@ -12,7 +12,7 @@ RUN echo "http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
  && apk upgrade --update\
  && apk add ca-certificates openssl \
       php7-fpm php7 php7-phar php7-cgi php7-mcrypt php7-json php7-memcached php7-pdo php7-pdo_mysql php7-gettext php7-opcache \
-      php7-ctype php7-dom php7-gd php7-iconv php7-json php7-xml php7-mbstring php7-posix php7-zip php7-zlib php7-openssl \
+      php7-ctype php7-dom php7-gd php7-iconv php7-json php7-xml php7-mbstring php7-posix php7-zip php7-zlib php7-openssl php7-simplexml \
       php7-pear php7-dev \
       git subversion \
       bzip2 \
