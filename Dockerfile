@@ -31,6 +31,7 @@ RUN echo "http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
  && git clone https://github.com/opensolutions/vimbadmin.git ${INSTALL_PATH} \
  && cd ${INSTALL_PATH} \
  && git checkout ${VIMBADMIN_VERSION} \
+ && sed -i -e 's#"doctrine/orm": "2.4.*#"doctrine/orm": "2.6.*#' composer.json \
  && composer config -g secure-http false \
  && composer install \
  && rm -rf ${INSTALL_PATH}/.git /var/cache/apk/* /tmp/* \
